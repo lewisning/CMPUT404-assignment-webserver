@@ -1,5 +1,7 @@
 #  coding: utf-8 
 import socketserver
+import os
+
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -27,12 +29,81 @@ import socketserver
 # try: curl -v -X GET http://127.0.0.1:8080/
 
 
+def get_file_type(path):
+    if '.css' in path:
+        return 'text/css'
+    elif '.html' in path:
+        return 'text/html'
+
+
+def response200(fileType):
+    response = f"HTTP/1.1 200 OK\r\nContent-type: {fileType}\r\n\r\n"
+    return response
+
+
+def response301():
+    response = f"HTTP/1.1 301 Moved Permanently\r\n\r\n"
+    return response.encode()
+
+
+def response404():
+    response = f"HTTP/1.1 404 Not Found\r\n\r\n"
+    return response.encode()
+
+
+def response405():
+    response = f"HTTP/1.1 405 Method Not Allowed\r\n\r\n"
+    return response.encode()
+
+
 class MyWebServer(socketserver.BaseRequestHandler):
-    
     def handle(self):
+        # Get the header
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        splited = self.data.decode().split(' ')
+        filename = splited[1]
+
+        # 1. Get the current directory path and add the address from header to the end of current path
+        #    Serve files from ./www
+        root = os.getcwd()
+
+        # 2. Check is the GET header
+        #    If not, then return 405 code for PUT/POST/DELETE
+        if 'GET' != splited[0]:
+            self.request.sendall(response405())
+        else:
+            # 3. Check is the path valid and Handle 404 error (path not found)
+            path = root + filename
+            print(path)
+            if os.path.isdir(path):
+                # Check is current path belongs to a file
+                if os.path.isfile(path):
+                    root_page = open(path, 'r')
+                    body = root_page.read()
+                    root_page.close()
+                else:
+                    # Check is the end of current path should be /
+                    if path.endswith('/'):
+                        root_page = open(path + 'index.html', 'r')
+                        body = root_page.read()
+                        root_page.close()
+                    else:
+                        self.request.sendall(response301())
+                        path += '/'
+                        root_page = open(path + 'index.html', 'r')
+                        body = root_page.read()
+                        root_page.close()
+
+                # 3. Check the type
+                fileType = get_file_type(path)
+
+                # 4. Send data
+                new_header = response200(fileType)
+                self.request.send(bytearray(new_header, 'utf-8'))
+                self.request.send(bytearray(body, 'utf-8'))
+            else:
+                self.request.sendall(response404())
+
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
