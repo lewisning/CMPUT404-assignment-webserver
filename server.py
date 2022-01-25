@@ -65,7 +65,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
         # 1. Get the current directory path and add the address from header to the end of current path
         #    Serve files from ./www
-        root = os.getcwd()
+        root = os.getcwd() + '/www'
 
         # 2. Check is the GET header
         #    If not, then return 405 code for PUT/POST/DELETE
@@ -74,25 +74,49 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             # 3. Check is the path valid and Handle 404 error (path not found)
             path = root + filename
-            print(path)
-            if os.path.isdir(path):
-                # Check is current path belongs to a file
-                if os.path.isfile(path):
-                    root_page = open(path, 'r')
-                    body = root_page.read()
-                    root_page.close()
-                else:
-                    # Check is the end of current path should be /
-                    if path.endswith('/'):
-                        root_page = open(path + 'index.html', 'r')
+            print('first step:', path)
+            if os.path.isdir(path) or os.path.isfile(path):
+                # Check is this path going deeper
+                if '/deep' in path:
+                    print('if in deep:', path)
+                    # Check is current path belongs to a file
+                    if os.path.isfile(path):
+                        root_page = open(path, 'r')
                         body = root_page.read()
                         root_page.close()
                     else:
-                        self.request.sendall(response301())
-                        path += '/'
-                        root_page = open(path + 'index.html', 'r')
+                        # Check is the end of current path should be /
+                        if path.endswith('/'):
+                            root_page = open(path + 'index.html', 'r')
+                            body = root_page.read()
+                            root_page.close()
+                        else:
+                            self.request.sendall(response301())
+                            path += '/'
+                            root_page = open(path + 'index.html', 'r')
+                            body = root_page.read()
+                            root_page.close()
+                else:
+                    # Check is current path belongs to a file
+                    print('root path:', path)
+                    if os.path.isfile(path):
+                        print('root file:', path)
+                        root_page = open(path, 'r')
                         body = root_page.read()
                         root_page.close()
+                    else:
+                        # Check is the end of current path should be /
+                        if path.endswith('/'):
+                            print('root new file:', path)
+                            root_page = open(path + 'index.html', 'r')
+                            body = root_page.read()
+                            root_page.close()
+                        else:
+                            self.request.sendall(response301())
+                            path += '/'
+                            root_page = open(path + 'index.html', 'r')
+                            body = root_page.read()
+                            root_page.close()
 
                 # 3. Check the type
                 fileType = get_file_type(path)
