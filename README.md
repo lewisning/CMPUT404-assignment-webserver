@@ -28,9 +28,8 @@ compatible) http://docs.python.org/2/library/socketserver.html
 References:
 ========================
 1. https://github.com/carrolji/CMPUT404-assignment-webserver/blob/master/server.py
-2. https://github.com/adbrown13/CMPUT404-assignment-webserver/blob/master/server.py
-3. https://github.com/alsobaie/CMPUT404-assignment-webserver/blob/master/server.py
-4. https://www.programiz.com/python-programming/datetime/current-time
-5. https://github.com/Jmmxp/CMPUT404-assignment-webserver/blob/master/server.py
-6. https://emalsha.wordpress.com/2016/11/24/how-create-http-server-using-python-socket-part-ii/
-7. https://www.cyberciti.biz/faq/understanding-etcgroup-file/
+2. https://github.com/alsobaie/CMPUT404-assignment-webserver/blob/master/server.py
+3. https://www.programiz.com/python-programming/datetime/current-time
+4. https://emalsha.wordpress.com/2016/11/24/how-create-http-server-using-python-socket-part-ii/
+5. https://www.cyberciti.biz/faq/understanding-etcgroup-file/
+6. https://www.geeksforgeeks.org/broken-pipe-error-in-python/
