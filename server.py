@@ -62,6 +62,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         splited = self.data.decode().split(' ')
         filename = splited[1]
+        body = ''
 
         # 1. Get the current directory path and add the address from header to the end of current path
         #    Serve files from ./www
@@ -74,57 +75,98 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             # 3. Check is the path valid and Handle 404 error (path not found)
             path = root + filename
-            print('first step:', path)
+            print('初始路径:', path)
             if os.path.isdir(path) or os.path.isfile(path):
-                # Check is this path going deeper
+                # Check is this path going to deep folder
                 if '/deep' in path:
-                    print('if in deep:', path)
+                    print('deep文件夹:', path)
                     # Check is current path belongs to a file
                     if os.path.isfile(path):
-                        root_page = open(path, 'r')
-                        body = root_page.read()
-                        root_page.close()
+                        if '.html' or '.css' in path:
+                            root_page = open(path, 'r')
+                            body = root_page.read()
+                            root_page.close()
                     else:
                         # Check is the end of current path should be /
                         if path.endswith('/'):
-                            root_page = open(path + 'index.html', 'r')
+                            print('deep有end:', path)
+                            path += 'index.html'
+                            root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                         else:
                             self.request.sendall(response301())
-                            path += '/'
-                            root_page = open(path + 'index.html', 'r')
+                            print('deep无end:', path)
+                            path += '/index.html'
+                            root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
-                else:
+
+                # Check is the path going to hardcode folder
+                elif '/hardcode' in path:
                     # Check is current path belongs to a file
-                    print('root path:', path)
+                    print('hardcode文件夹:', path)
                     if os.path.isfile(path):
-                        print('root file:', path)
-                        root_page = open(path, 'r')
-                        body = root_page.read()
-                        root_page.close()
+                        if '.html' or '.css' in path:
+                            print('hardcode中的文件:', path)
+                            root_page = open(path, 'r')
+                            body = root_page.read()
+                            root_page.close()
                     else:
                         # Check is the end of current path should be /
                         if path.endswith('/'):
-                            print('root new file:', path)
-                            root_page = open(path + 'index.html', 'r')
+                            print('hardcode有结尾:', path)
+                            path += 'index.html'
+                            root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                         else:
                             self.request.sendall(response301())
-                            path += '/'
-                            root_page = open(path + 'index.html', 'r')
+                            print('hardcode无结尾:', path)
+                            path += '/index.html'
+                            root_page = open(path, 'r')
+                            body = root_page.read()
+                            root_page.close()
+
+                # Check is the current opening file belongs to group file
+                elif '/group' in path:
+                    self.request.sendall(response404())
+
+                # If not going to deeper two folders, then access the root file
+                elif '/www' in path:
+                    # Check is current path belongs to a file
+                    print('底层文件夹:', path)
+                    if os.path.isfile(path):
+                        if '.html' or '.css' in path:
+                            print('底层打开的是文件:', path)
+                            root_page = open(path, 'r')
+                            body = root_page.read()
+                            root_page.close()
+                    else:
+                        # Check is the end of current path should be /
+                        if path.endswith('/'):
+                            print('底层打开的不是文件有结尾:', path)
+                            path += 'index.html'
+                            root_page = open(path, 'r')
+                            body = root_page.read()
+                            root_page.close()
+                        else:
+                            self.request.sendall(response301())
+                            path += '/index.html'
+                            root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
 
                 # 3. Check the type
+                print('最终路径:', path)
+                print()
                 fileType = get_file_type(path)
 
                 # 4. Send data
                 new_header = response200(fileType)
                 self.request.send(bytearray(new_header, 'utf-8'))
-                self.request.send(bytearray(body, 'utf-8'))
+                if body is not None:
+                    self.request.send(bytearray(body, 'utf-8'))
             else:
                 self.request.sendall(response404())
 
