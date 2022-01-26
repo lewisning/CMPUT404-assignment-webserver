@@ -3,7 +3,7 @@ import socketserver
 import os
 
 
-# Copyright 2013 Abram Hindle, Eddie Antonio Santos
+# Copyright 2022 Abram Hindle, Eddie Antonio Santos, Lewis Ning
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -75,11 +75,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
         else:
             # 3. Check is the path valid and Handle 404 error (path not found)
             path = root + filename
-            print('初始路径:', path)
             if os.path.isdir(path) or os.path.isfile(path):
                 # Check is this path going to deep folder
                 if '/deep' in path:
-                    print('deep文件夹:', path)
                     # Check is current path belongs to a file
                     if os.path.isfile(path):
                         if '.html' or '.css' in path:
@@ -89,14 +87,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
                     else:
                         # Check is the end of current path should be /
                         if path.endswith('/'):
-                            print('deep有end:', path)
                             path += 'index.html'
                             root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                         else:
                             self.request.sendall(response301())
-                            print('deep无end:', path)
                             path += '/index.html'
                             root_page = open(path, 'r')
                             body = root_page.read()
@@ -105,24 +101,20 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 # Check is the path going to hardcode folder
                 elif '/hardcode' in path:
                     # Check is current path belongs to a file
-                    print('hardcode文件夹:', path)
                     if os.path.isfile(path):
                         if '.html' or '.css' in path:
-                            print('hardcode中的文件:', path)
                             root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                     else:
                         # Check is the end of current path should be /
                         if path.endswith('/'):
-                            print('hardcode有结尾:', path)
                             path += 'index.html'
                             root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                         else:
                             self.request.sendall(response301())
-                            print('hardcode无结尾:', path)
                             path += '/index.html'
                             root_page = open(path, 'r')
                             body = root_page.read()
@@ -135,17 +127,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 # If not going to deeper two folders, then access the root file
                 elif '/www' in path:
                     # Check is current path belongs to a file
-                    print('底层文件夹:', path)
                     if os.path.isfile(path):
                         if '.html' or '.css' in path:
-                            print('底层打开的是文件:', path)
                             root_page = open(path, 'r')
                             body = root_page.read()
                             root_page.close()
                     else:
                         # Check is the end of current path should be /
                         if path.endswith('/'):
-                            print('底层打开的不是文件有结尾:', path)
                             path += 'index.html'
                             root_page = open(path, 'r')
                             body = root_page.read()
@@ -158,8 +147,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
                             root_page.close()
 
                 # 3. Check the type
-                print('最终路径:', path)
-                print()
                 fileType = get_file_type(path)
 
                 # 4. Send data
