@@ -1,4 +1,5 @@
 #  coding: utf-8 
+import errno
 import socketserver
 import os
 
@@ -74,8 +75,9 @@ class MyWebServer(socketserver.BaseRequestHandler):
             self.request.sendall(response405())
         else:
             # 3. Check is the path valid and Handle 404 error (path not found)
+            #    and is the current opening file belongs to group file
             path = root + filename
-            if os.path.isdir(path) or os.path.isfile(path):
+            if os.path.isdir(path) or os.path.isfile(path) and '/group' not in path:
                 # Check is this path going to deep folder
                 if '/deep' in path:
                     # Check is current path belongs to a file
@@ -120,10 +122,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
                             body = root_page.read()
                             root_page.close()
 
-                # Check is the current opening file belongs to group file
-                elif '/group' in path:
-                    self.request.sendall(response404())
-
                 # If not going to deeper two folders, then access the root file
                 elif '/www' in path:
                     # Check is current path belongs to a file
@@ -152,8 +150,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 # 4. Send data
                 new_header = response200(fileType)
                 self.request.send(bytearray(new_header, 'utf-8'))
-                if body is not None:
+                try:
                     self.request.send(bytearray(body, 'utf-8'))
+                except IOError as e:
+                    if e.errno == errno.EPIPE:
+                        pass
             else:
                 self.request.sendall(response404())
 
